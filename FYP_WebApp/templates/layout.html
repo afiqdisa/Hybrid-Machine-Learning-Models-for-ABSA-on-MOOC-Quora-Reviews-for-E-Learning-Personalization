@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MOOC Sentiment Analyzer{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto+Slab:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .sidebar {
+            background-color: #1e3a8a;
+            color: #e0e7ff;
+            transition: width 0.3s ease;
+        }
+        .sidebar-item {
+            border-left: 4px solid transparent;
+            transition: background-color 0.2s ease, border-left-color 0.2s ease;
+        }
+        .sidebar-item:hover, .sidebar-item.active {
+            background-color: #2b6cb0; /* A compatible hover color */
+            border-left-color: #93c5fd;
+            color: #ffffff;
+        }
+        .sidebar-item i {
+            transition: transform 0.2s ease;
+        }
+        .sidebar-item:hover i, .sidebar-item.active i {
+            transform: scale(1.1);
+        }
+        .content-area {
+            transition: margin-left 0.3s ease;
+        }
+        .header-bar {
+            background-color: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .page-title-text {
+            font-family: 'Roboto Slab', serif;
+            color: #1e3a8a;
+        }
+        .dropdown-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        /* Modal styles */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            max-height: 90vh;
+        }
+        .modal-image-container {
+            max-height: 75vh;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: default;
+        }
+        .modal-image-container img {
+            object-fit: contain;
+            transition: transform 0.1s ease-out;
+            transform-origin: center center;
+        }
+        .info-box-container {
+            position: relative;
+        }
+        .info-box-popup {
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 280px;
+            z-index: 50;
+            text-align: justify;
+        }
+        .tab-button {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+            border-bottom: 2px solid transparent; /* Default non-active state */
+        }
+
+        .tab-button.active {
+            color: #1e3a8a; /* Dark blue text */
+            border-bottom-color: #1e3a8a; /* Dark blue underline */
+        }
+        .bg-sentiment-positive {
+            background-color: #ECFDF5; /* Very light green */
+            border-left: 5px solid #2ECC71; /* Solid green border */
+        }
+        .bg-sentiment-neutral {
+            background-color: #FEF9E7; /* Very light yellow */
+            border-left: 5px solid #F1C40F; /* Solid yellow border */
+        }
+        .bg-sentiment-negative {
+            background-color: #FEF2F2; /* Very light red */
+            border-left: 5px solid #E74C3C; /* Solid red border */
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<aside id="sidebar" class="sidebar w-64 min-h-screen p-4 space-y-2 fixed top-0 left-0 h-full overflow-y-auto z-30">
+    <div class="text-center py-4 mb-4">
+        <i class="fas fa-chart-pie fa-3x text-blue-300 mb-2"></i>
+        <h1 class="text-2xl font-bold text-white">MOOC Quora Overview</h1>
+    </div>
+    <nav class="space-y-1">
+        <a href="{{ url_for('main.landing_page') }}" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg {% if request.path == url_for('main.landing_page') %}active{% endif %}">
+            <i class="fas fa-door-open w-6"></i>
+            <span class="sidebar-text">Welcome</span>
+        </a>
+        <a href="{{ url_for('main.home_page') }}" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg {% if request.path == url_for('main.home_page') %}active{% endif %}">
+            <i class="fas fa-home w-6"></i>
+            <span class="sidebar-text">Home</span>
+        </a>
+        <a href="{{ url_for('main.dashboard_page') }}" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg {% if request.path.startswith(url_for('main.dashboard_page')) %}active{% endif %}">
+            <i class="fas fa-tachometer-alt w-6"></i>
+            <span class="sidebar-text">Dashboard</span>
+        </a>
+        <a href="{{ url_for('main.coursera_page') }}" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg {% if request.path.startswith(url_for('main.coursera_page')) %}active{% endif %}">
+            <i class="fas fa-graduation-cap w-6"></i>
+            <span class="sidebar-text">Coursera</span>
+        </a>
+        <a href="{{ url_for('main.edx_page') }}" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg {% if request.path.startswith(url_for('main.edx_page')) %}active{% endif %}">
+            <i class="fas fa-book-open w-6"></i>
+            <span class="sidebar-text">EdX</span>
+        </a>
+        <a href="{{ url_for('main.udemy_page') }}" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg {% if request.path.startswith(url_for('main.udemy_page')) %}active{% endif %}">
+            <i class="fas fa-laptop-code w-6"></i>
+            <span class="sidebar-text">Udemy</span>
+        </a>
+        <a href="{{ url_for('main.recommendation_page') }}" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg {% if request.path.startswith(url_for('main.recommendation_page')) %}active{% endif %}">
+            <i class="fas fa-star w-6"></i>
+            <span class="sidebar-text">Recommendation</span>
+        </a>
+        <a href="{{ url_for('main.sentiment_analyzer') }}" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg {% if request.path.startswith(url_for('main.sentiment_analyzer')) %}active{% endif %}">
+            <i class="fas fa-vial fa-fw w-6"></i>
+            <span class="sidebar-text">Sentiment Analyzer</span>
+        </a>
+    </nav>
+    <button id="toggleSidebarButton" class="md:hidden fixed bottom-4 left-4 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg z-40">
+        <i class="fas fa-bars"></i>
+    </button>
+</aside>
+
+<div id="contentArea" class="flex-1 flex flex-col overflow-y-auto ml-64">
+    <header class="header-bar sticky top-0 z-20 p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h2 class="page-title-text text-2xl font-semibold">{% block page_title %}Page Title{% endblock %}</h2>
+            <div class="text-sm text-gray-500">
+                {{ now.strftime('%A, %B %d, %Y') }}
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow p-6">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<!-- Modal Gallery -->
+<div id="imageGalleryModal" class="fixed inset-0 modal-overlay items-center justify-center p-4 hidden z-50">
+    <div class="modal-content bg-white p-4 md:p-6 rounded-lg shadow-xl max-w-4xl w-full mx-auto overflow-hidden flex flex-col">
+        <div class="flex justify-between items-center mb-4 shrink-0">
+            <h3 id="galleryModalTitle" class="text-2xl font-semibold text-gray-800">Image Gallery</h3>
+            <button onclick="closeModal('imageGalleryModal')" class="text-gray-600 hover:text-gray-900 text-2xl font-bold">&times;</button>
+        </div>
+        <div id="galleryModalBody" class="text-center flex-grow flex flex-col items-center justify-center relative">
+            <div class="modal-image-container mb-2 w-full flex items-center justify-center">
+                <img id="galleryImage" src="" alt="Gallery Image" class="rounded-md">
+            </div>
+            <div class="flex justify-between items-center w-full mt-2 shrink-0">
+                <button id="prevImageBtn" onclick="changeGalleryImage(-1)" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l">
+                    <i class="fas fa-chevron-left"></i> Prev
+                </button>
+                <span id="imageCounter" class="text-sm text-gray-600"></span>
+                <button id="nextImageBtn" onclick="changeGalleryImage(1)" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- Sidebar JS ---
+const sidebar = document.getElementById('sidebar');
+const contentArea = document.getElementById('contentArea');
+const toggleSidebarButton = document.getElementById('toggleSidebarButton');
+let sidebarOpen = true;
+
+function toggleSidebar() {
+    sidebarOpen = !sidebarOpen;
+    if (sidebarOpen) {
+        sidebar.classList.remove('w-0', 'p-0');
+        sidebar.classList.add('w-64', 'p-4');
+        if (window.innerWidth >= 768) {
+            contentArea.classList.remove('ml-0');
+            contentArea.classList.add('ml-64');
+        }
+        sidebar.querySelectorAll('.sidebar-text').forEach(el => el.classList.remove('hidden'));
+        sidebar.querySelector('h1').classList.remove('hidden');
+        sidebar.querySelector('.fa-chart-pie').classList.remove('hidden');
+        toggleSidebarButton.innerHTML = '<i class="fas fa-times"></i>';
+    } else {
+        sidebar.classList.remove('w-64', 'p-4');
+        sidebar.classList.add('w-0', 'p-0');
+        if (window.innerWidth >= 768) {
+            contentArea.classList.remove('ml-64');
+            contentArea.classList.add('ml-0');
+        }
+        sidebar.querySelectorAll('.sidebar-text').forEach(el => el.classList.add('hidden'));
+        sidebar.querySelector('h1').classList.add('hidden');
+        sidebar.querySelector('.fa-chart-pie').classList.add('hidden');
+        toggleSidebarButton.innerHTML = '<i class="fas fa-bars"></i>';
+    }
+}
+
+function checkScreenSize() {
+    if (window.innerWidth < 768) {
+        if (sidebarOpen) {
+            toggleSidebar();
+        }
+        toggleSidebarButton.classList.remove('md:hidden');
+        contentArea.classList.remove('ml-64');
+        contentArea.classList.add('ml-0');
+    } else {
+        if (!sidebarOpen) {
+            toggleSidebar();
+        }
+        toggleSidebarButton.classList.add('md:hidden');
+        if (sidebarOpen) {
+           contentArea.classList.add('ml-64');
+           contentArea.classList.remove('ml-0');
+        }
+    }
+}
+
+toggleSidebarButton.addEventListener('click', toggleSidebar);
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.innerWidth >= 768) {
+        sidebarOpen = true;
+        sidebar.classList.add('w-64', 'p-4');
+        contentArea.classList.add('ml-64');
+        toggleSidebarButton.classList.add('md:hidden');
+        // Initially set to times, as it's open
+        // toggleSidebarButton.innerHTML = '<i class="fas fa-times"></i>';
+    } else {
+        sidebarOpen = false;
+        sidebar.classList.add('w-0', 'p-0');
+        sidebar.querySelectorAll('.sidebar-text').forEach(el => el.classList.add('hidden'));
+        sidebar.querySelector('h1').classList.add('hidden');
+        sidebar.querySelector('.fa-chart-pie').classList.add('hidden');
+        contentArea.classList.add('ml-0');
+        toggleSidebarButton.classList.remove('md:hidden');
+        toggleSidebarButton.innerHTML = '<i class="fas fa-bars"></i>';
+    }
+    checkScreenSize(); // Run on load
+});
+
+window.addEventListener('resize', checkScreenSize);
+
+// --- Dropdown JavaScript ---
+function toggleDropdown(contentId, arrowId) {
+    const content = document.getElementById(contentId);
+    const arrow = document.getElementById(arrowId);
+    const allContents = document.querySelectorAll('.dropdown-content');
+    const allArrows = document.querySelectorAll('.fa-chevron-down, .fa-chevron-up');
+
+    // Close other open dropdowns
+    allContents.forEach(function(el) {
+        if (el.id !== contentId && el.classList.contains('open')) {
+            el.classList.remove('open');
+            el.style.maxHeight = null;
+            el.style.paddingTop = "0";
+            el.style.paddingBottom = "0";
+        }
+    });
+
+    allArrows.forEach(function(ar) {
+        if (ar.id !== arrowId && ar.classList.contains('fa-chevron-up')) {
+            ar.classList.remove('fa-chevron-up');
+            ar.classList.add('fa-chevron-down');
+        }
+    });
+
+    // Toggle the clicked dropdown
+    if (content.classList.contains('open')) {
+        content.classList.remove('open');
+        arrow.classList.remove('fa-chevron-up');
+        arrow.classList.add('fa-chevron-down');
+        content.style.maxHeight = null;
+        content.style.paddingTop = "0";
+        content.style.paddingBottom = "0";
+    } else {
+        content.classList.add('open');
+        arrow.classList.remove('fa-chevron-down');
+        arrow.classList.add('fa-chevron-up');
+        content.style.paddingTop = "1.5rem"; // Corresponds to p-6 in Tailwind
+        content.style.paddingBottom = "1.5rem";
+        content.style.maxHeight = content.scrollHeight + "px";
+    }
+}
+
+// --- ADD THIS FOR INFO BUTTONS ---
+function toggleInfo(infoBoxId) {
+    const infoBox = document.getElementById(infoBoxId);
+    if (infoBox) {
+        // Close all other open info boxes first
+        document.querySelectorAll('.info-box-popup').forEach(box => {
+            if (box.id !== infoBoxId) {
+                box.classList.add('hidden');
+            }
+        });
+        // Then toggle the clicked one
+        infoBox.classList.toggle('hidden');
+    }
+}
+
+// Also add this function to close pop-ups when clicking away
+window.addEventListener('click', function(event) {
+    if (!event.target.closest('.info-button') && !event.target.closest('.info-box-popup')) {
+        document.querySelectorAll('.info-box-popup').forEach(box => {
+            box.classList.add('hidden');
+        });
+    }
+});
+
+// --- Modal Gallery JavaScript ---
+let currentImageIndex = 0;
+let galleryImages = [];
+let currentZoomLevel = 1.0;
+const MIN_ZOOM = 0.3;
+const MAX_ZOOM = 3.0;
+const ZOOM_STEP = 0.1;
+
+const galleryImageElement = document.getElementById('galleryImage');
+const galleryModalTitleElement = document.getElementById('galleryModalTitle');
+const imageCounterElement = document.getElementById('imageCounter');
+const prevImageBtn = document.getElementById('prevImageBtn');
+const nextImageBtn = document.getElementById('nextImageBtn');
+const modalImageContainer = document.querySelector('.modal-image-container');
+
+let isPanning = false;
+let startX, startY, scrollLeftStart, scrollTopStart;
+
+function openModal(modalId, images, title = 'Image Gallery', initialIndex = 0) {
+    const modal = document.getElementById(modalId);
+    galleryImages = images;
+    currentImageIndex = initialIndex;
+    currentZoomLevel = 1.0;
+    if (galleryImageElement) galleryImageElement.style.transformOrigin = 'center center';
+    if (galleryModalTitleElement) galleryModalTitleElement.textContent = title;
+    updateGalleryDisplay();
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = 'auto';
+    galleryImages = [];
+    currentImageIndex = 0;
+    currentZoomLevel = 1.0;
+    if (galleryImageElement) {
+        galleryImageElement.style.transform = 'scale(1.0)';
+        galleryImageElement.style.cursor = 'default';
+        galleryImageElement.style.transformOrigin = 'center center';
+    }
+}
+
+function updateGalleryDisplay() {
+    if (galleryImages.length > 0 && galleryImageElement) {
+        galleryImageElement.src = galleryImages[currentImageIndex];
+        galleryImageElement.alt = `Image ${currentImageIndex + 1}`;
+        galleryImageElement.style.transform = `scale(${currentZoomLevel})`;
+        if (imageCounterElement) imageCounterElement.textContent = `${currentImageIndex + 1} / ${galleryImages.length}`;
+        if (prevImageBtn) prevImageBtn.disabled = (currentImageIndex === 0);
+        if (nextImageBtn) nextImageBtn.disabled = (currentImageIndex === galleryImages.length - 1);
+        galleryImageElement.style.cursor = currentZoomLevel > 1 ? 'grab' : 'default';
+        if (modalImageContainer) modalImageContainer.style.cursor = currentZoomLevel > 1 ? 'grab' : 'default';
+    } else {
+        if (galleryImageElement) {
+            galleryImageElement.src = "";
+            galleryImageElement.alt = "No image";
+            galleryImageElement.style.transform = 'scale(1.0)';
+        }
+        if (imageCounterElement) imageCounterElement.textContent = "0 / 0";
+        if (prevImageBtn) prevImageBtn.disabled = true;
+        if (nextImageBtn) nextImageBtn.disabled = true;
+    }
+}
+
+function changeGalleryImage(direction) {
+    currentImageIndex += direction;
+    if (currentImageIndex < 0) {
+        currentImageIndex = 0;
+    } else if (currentImageIndex >= galleryImages.length) {
+        currentImageIndex = galleryImages.length - 1;
+    }
+    currentZoomLevel = 1.0;
+    if (galleryImageElement) galleryImageElement.style.transformOrigin = 'center center';
+    updateGalleryDisplay();
+}
+
+if (galleryImageElement) {
+    galleryImageElement.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        const originXpx = e.offsetX;
+        const originYpx = e.offsetY;
+        galleryImageElement.style.transformOrigin = `${originXpx}px ${originYpx}px`;
+
+        if (e.deltaY < 0) {
+            currentZoomLevel = Math.min(MAX_ZOOM, currentZoomLevel + ZOOM_STEP);
+        } else {
+            currentZoomLevel = Math.max(MIN_ZOOM, currentZoomLevel - ZOOM_STEP);
+        }
+        updateGalleryDisplay();
+    });
+}
+
+if (modalImageContainer && galleryImageElement) {
+    modalImageContainer.addEventListener('mousedown', (e) => {
+        if (currentZoomLevel > 1) {
+            isPanning = true;
+            startX = e.pageX - modalImageContainer.offsetLeft;
+            startY = e.pageY - modalImageContainer.offsetTop;
+            scrollLeftStart = modalImageContainer.scrollLeft;
+            scrollTopStart = modalImageContainer.scrollTop;
+            galleryImageElement.style.cursor = 'grabbing';
+            modalImageContainer.style.cursor = 'grabbing';
+        }
+    });
+    modalImageContainer.addEventListener('mouseleave', () => {
+        if (isPanning) {
+            isPanning = false;
+            galleryImageElement.style.cursor = 'grab';
+            modalImageContainer.style.cursor = 'grab';
+        }
+    });
+    modalImageContainer.addEventListener('mouseup', () => {
+        if (isPanning) {
+            isPanning = false;
+            galleryImageElement.style.cursor = 'grab';
+            modalImageContainer.style.cursor = 'grab';
+        }
+    });
+    modalImageContainer.addEventListener('mousemove', (e) => {
+        if (!isPanning || currentZoomLevel <= 1) return;
+        e.preventDefault();
+        const x = e.pageX - modalImageContainer.offsetLeft;
+        const y = e.pageY - modalImageContainer.offsetTop;
+        const walkX = (x - startX) * 1.5;
+        const walkY = (y - startY) * 1.5;
+        modalImageContainer.scrollLeft = scrollLeftStart - walkX;
+        modalImageContainer.scrollTop = scrollTopStart - walkY;
+    });
+}
+
+window.addEventListener('click', function (event) {
+    const modal = document.getElementById('imageGalleryModal');
+    if (event.target === modal) {
+        closeModal('imageGalleryModal');
+    }
+});
+
+// 2. Tab Switching Function (FIX: MOVED HERE)
+function switchTab(tabName) {
+    // Hide all tab content panes
+    document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.add('hidden');
+    });
+    // Deactivate all tab buttons
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active');
+    });
+    // Show the selected tab pane and activate its button
+    const selectedPane = document.getElementById(tabName + '-pane');
+    if (selectedPane) {
+        selectedPane.classList.remove('hidden');
+    }
+    const selectedButton = document.getElementById(tabName + '-tab');
+    if (selectedButton) {
+        selectedButton.classList.add('active');
+    }
+}
+</script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+
+{% block title %} Welcome - MOOC Quora Reviews Analyzer {% endblock %}
+
+{% block page_title %} Welcome {% endblock %}
+
+{% block content %}
+<div class="relative min-h-screen flex flex-col items-center justify-between text-center p-4 md:p-8 bg-no-repeat bg-cover bg-center bg-fixed"
+    style="background-image: url('{{ url_for('static', filename='images/study_group.jpg') }}');">
+
+    <div class="absolute inset-0 bg-black opacity-60 z-0"></div>
+
+    <div class="flex-grow w-full flex items-center justify-center">
+        <div class="relative z-10 flex flex-col md:flex-row items-stretch justify-center w-full max-w-6xl mx-auto my-8 gap-x-6 md:gap-x-8">
+
+            <!-- Quora Info Box -->
+            <div class="w-full md:w-1/3 lg:w-1/4 bg-white p-6 rounded-xl shadow-xl text-left flex flex-col">
+                <div class="flex items-center mb-4 shrink-0">
+                    <img src="{{ url_for('static', filename='images/quora logo.png') }}" alt="Quora Logo" class="h-10 w-10 mx-3 object-contain">
+                    <h3 class="text-xl font-semibold text-red-800">About Quora</h3>
+                </div>
+                <div class="flex-grow text-sm text-black leading-relaxed text-justify">
+                    <p class="mb-3">
+                        Quora is a Q&A platform where users discuss various topics, including MOOCs.
+                        It provides rich, unbiased, and often detailed user-generated reviews,
+                        making it a valuable data source for sentiment analysis, free from platform-hosted review biases.
+                    </p>
+                    <p>
+                        The formal, long-form responses help in understanding nuanced sentiments across different learning aspects.
+                    </p>
+                </div>
+                <div class="mt-auto pt-4 space-y-3 shrink-0">
+                    <button
+                        onclick="openQuoraGallery()"
+                        class="w-full bg-gray-300 hover:bg-gray-400 text-black font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transform transition-transform duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 text-sm">
+                        View Quora Interface
+                    </button>
+                    <a href="https://www.quora.com" target="_blank" rel="noopener noreferrer"
+                       class="block w-full bg-gray-300 hover:bg-gray-400 text-black font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transform transition-transform duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 text-sm">
+                        Visit Quora Website <i class="fas fa-external-link-alt ml-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="w-full md:w-2/3 lg:w-3/4 flex flex-col items-center gap-6">
+                <div class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full">
+                    <header class="mb-8">
+                        <h1 class="text-3xl md:text-4xl font-bold text-blue-700 mb-4 leading-tight">
+                            Hybrid Machine Learning Models for Aspect-Based Sentiment Analysis for MOOC Quora Reviews for E-Learning Personalization
+                        </h1>
+                        <p class="text-lg md:text-xl text-black mt-2">
+                            Discover insights from Quora reviews about MOOC platforms
+                        </p>
+                         <p class="text-md text-black mt-2">
+                            Content | Structure | Assessment | Interaction | Instructor
+                        </p>
+                    </header>
+                    <div class="mt-10 text-center">
+                        <a href="{{ url_for('main.home_page') }}"
+                           class="inline-block bg-blue-600 hover:bg-blue-700 
+                           text-white font-semibold py-3 px-8 rounded-lg text-lg shadow-lg hover:shadow-xl 
+                           transform transition-transform duration-200 hover:scale-105 focus:outline-none 
+                           focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                            Enter Now <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+                 <div class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full text-left">
+                    <h2 class="text-2xl font-semibold text-black mb-4">About</h2>
+                    <p class="text-black leading-relaxed text-justify">
+                        This system analyzes Quora reviews collected between 1 January 2024 and 1 January 2025 to classify e-learning MOOCs and provide personalized learning recommendations, implementing a hybrid model that combines Decision Tree (DT) and Support Vector Machine (SVM) for Aspect-Based Sentiment Analysis
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer class="relative z-10 w-full py-6 text-center text-white text-sm mt-auto">
+        <p>&copy; {{ now.year }} Muhammad Afiq Bin Md Disa FYP Project</p>
+        <p>Universiti Teknologi MARA</p>
+    </footer>
+</div>
+
+<script>
+    const quoraImageUrls = [
+        "{{ url_for('static', filename='images/quora_home_page.png') }}", 
+        "{{ url_for('static', filename='images/quora_answer_page.png') }}",
+        "{{ url_for('static', filename='images/quora_spaces_page.png') }}",
+        "{{ url_for('static', filename='images/quora_notifications_page.png') }}",
+        "{{ url_for('static', filename='images/quora_following_page.png') }}"
+    ];
+
+    function openQuoraGallery() {
+        openModal('imageGalleryModal', quoraImageUrls, 'Quora Interfaces');
+    }
+</script>
+
+{% endblock %}

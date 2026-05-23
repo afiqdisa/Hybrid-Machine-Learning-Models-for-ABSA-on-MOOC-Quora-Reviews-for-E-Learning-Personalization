@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+
+{% block title %} Sentiment Analyzer {% endblock %}
+
+{% block page_title %} Sentiment Analyzer {% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg max-w-4xl mx-auto mb-8 text-center">
+        <h1 class="text-4xl font-bold text-black">Live Sentiment Analyzer</h1>
+        <p class="mt-2 text-lg text-black">Enter a sentence about a MOOC to analyze its sentiment across different aspects</p>
+    </div>
+
+    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Input Box -->
+    <section class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+        <form action="{{ url_for('main.sentiment_analyzer') }}" method="POST">
+        <div class="mb-4">
+            <label for="review_text" class="block text-sm font-medium text-black mb-2"><b>Your Review:</b></label>
+            <textarea id="review_text" name="review_text" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" rows="4" placeholder="e.g., 'content is good'">{{ review_text or '' }}</textarea>
+        </div>
+        <div class="text-center">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition-transform transform hover:scale-105">
+            Analyze Sentiment
+            </button>
+        </div>
+        </form>
+    </section>
+
+    <!-- Results Box -->
+    <section class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+        <h4 class="text-xl font-semibold text-black mb-4 text-center">Analysis Results</h4>
+        <div class="overflow-x-auto border rounded-lg">
+            <table class="min-w-full table-auto text-sm">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold text-black uppercase">Aspect</th>
+                        <th class="px-4 py-3 text-left font-semibold text-black uppercase">Predicted Sentiment</th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    {% for result in results %}
+                    <tr>
+                        <td class="px-4 py-3 text-gray-800 font-medium">{{ result.aspect }}</td>
+                        <td class="px-4 py-3 font-bold 
+                        {% if result.sentiment == 'Positive' %}
+                            text-green-600
+                        {% elif result.sentiment == 'Negative' %}
+                            text-red-600
+                        {% else %}
+                            text-gray-500
+                        {% endif %}">
+                        {{ result.sentiment }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <!-- This will show if there are no results yet -->
+                    <tr>
+                        <td colspan="2" class="px-4 py-3 text-center text-gray-500">
+                        No results yet. Please submit a review to analyze sentiment.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    </div>
+</div>
+{% endblock %}

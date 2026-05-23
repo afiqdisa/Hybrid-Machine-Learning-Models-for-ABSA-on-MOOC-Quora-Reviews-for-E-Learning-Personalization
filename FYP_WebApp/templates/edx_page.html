@@ -1,0 +1,381 @@
+{% extends "layout.html" %}
+
+{% block title %} {{ platform_name }} Sentiment Analysis {% endblock %}
+
+{% block page_title %} {{ platform_name }} Detailed Analysis {% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 space-y-12">
+
+    <header class="mb-6 text-center">
+        <div class="inline-flex items-center justify-center p-6 bg-white border border-gray-300 rounded-xl shadow-md text-left">
+            <img src="{{ url_for('static', filename='images/' + platform_logo) }}" alt="{{ platform_name }} Logo" class="h-20 w-20 mr-4 rounded-md object-contain">
+            <div class="flex flex-col items-start">
+                <h1 class="text-4xl font-bold text-black">{{ platform_name }} Sentiment Analysis</h1>
+                <p class="mt-2 text-lg text-black">An interactive breakdown of {{ platform_name }} sentiment based on Quora reviews</p>
+            </div>
+        </div>
+    </header>
+
+    <section class="p-6 bg-white rounded-xl shadow-lg text-center">
+        <div class="inline-block mb-6 px-6 py-4 bg-white border border-gray-300 rounded-xl shadow">
+            <h2 class="text-3xl font-semibold text-black">Platform-Wide Overview</h2>
+        </div>
+
+        <div class="mb-8 text-center">
+            <div class="p-6 bg-white border-2 border-blue-500 rounded-xl shadow-md inline-block">
+                <p class="text-lg text-black font-semibold">Grand Total Reviews</p>
+                <p class="text-5xl font-bold text-black mt-2">{{ overview_data.grand_total }}</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-center">
+            <div class="p-4 bg-white border-2 border-green-500 rounded-lg shadow-md">
+                <p class="text-sm text-black font-semibold">Total Positive Reviews</p>
+                <p class="text-3xl font-bold text-black">{{ overview_data.total_positive }}</p>
+            </div>
+            <div class="p-4 bg-white border-2 border-yellow-500 rounded-lg shadow-md">
+                <p class="text-sm text-black font-semibold">Total Neutral Reviews</p>
+                <p class="text-3xl font-bold text-black">{{ overview_data.total_neutral }}</p>
+            </div>
+            <div class="p-4 bg-white border-2 border-red-500 rounded-lg shadow-md">
+                <p class="text-sm text-black font-semibold">Total Negative Reviews</p>
+                <p class="text-3xl font-bold text-black">{{ overview_data.total_negative }}</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {% for sentiment in ['Positive', 'Neutral', 'Negative'] %}
+        {% set sentiment_border_class = {
+            'Positive': 'border-green-500',
+            'Neutral': 'border-yellow-500',
+            'Negative': 'border-red-500'
+        }.get(sentiment) %}
+
+        <div class="p-4 bg-white rounded-lg shadow-inner border-2 {{ sentiment_border_class }}">
+            <h4 class="text-lg font-semibold text-black mb-2 text-center">Most Mentioned {{ sentiment }} Words</h4>
+            <div class="mt-2 w-full h-56 flex items-center justify-center rounded-lg">
+                {% set wordcloud_img = overview_data[sentiment.lower() + '_wordcloud'] %}
+                {% if wordcloud_img %}
+                    <img src="data:image/png;base64,{{ wordcloud_img }}" alt="{{ sentiment }} Word Cloud" class="max-w-full max-h-full object-contain">
+                {% else %}
+                    <p class="text-black">Not enough data for word cloud</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+    </section>
+
+    <section class="p-6 bg-white rounded-xl shadow-lg">
+        <h2 class="text-3xl font-semibold text-black mb-6 text-center">Detailed Analysis</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="space-y-6 p-4 border border-gray-200 rounded-lg bg-gray-50 shadow-inner">
+
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <div class="flex items-center justify-center mb-2 info-box-container relative">
+                        <h3 class="text-xl font-medium text-black">Pie Chart: {{ platform_name }} Sentiment Distribution</h3>
+                        <i class="fas fa-info-circle text-blue-500 ml-2 cursor-pointer info-button" onclick="toggleInfo('coursera-pie-info')"></i>
+                        <div id="coursera-pie-info" class="info-box-popup hidden p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-sm shadow-lg absolute z-10 bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-sm">
+                            {{ main_charts_data.pie_chart_explanation | safe }}
+                        </div>
+                    </div>
+                    <div id="platformPieChart" class="w-full h-96"></div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <div class="flex items-center justify-center mb-2 info-box-container relative">
+                        <h3 class="text-xl font-medium text-black">Line Chart: {{ platform_name }} Sentiment Trends Over Time</h3>
+                        <i class="fas fa-info-circle text-blue-500 ml-2 cursor-pointer info-button" onclick="toggleInfo('coursera-line-info')"></i>
+                        <div id="coursera-line-info" class="info-box-popup hidden p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-sm shadow-lg absolute z-10 bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-sm">
+                            {{ main_charts_data.line_chart_explanation | safe }}
+                        </div>
+                    </div>
+                    <div id="platformLineChart" class="w-full h-96"></div>
+                </div>
+
+            </div>
+
+            <div class="p-4 border border-gray-200 rounded-lg bg-gray-50 shadow-inner">
+                <h3 class="text-xl font-medium text-black mb-4">Explore by Aspect</h3>
+                <select id="aspect-selector" class="w-full p-2 border rounded-md mb-4 bg-white shadow-sm">
+                    <option value="">-- Select an Aspect --</option>
+                    {% for aspect in aspect_list %}
+                        <option value="{{ aspect }}">{{ aspect }}</option>
+                    {% endfor %}
+                </select>
+                <div id="aspect-viewer" class="space-y-6 h-[850px] overflow-y-auto border-t pt-4">
+                    <div id="aspect-placeholder" class="text-center pt-20">
+                        <i class="fas fa-arrow-up fa-2x mb-2 text-black"></i>
+                        <p>Select an aspect to view its detailed visuals.</p>
+                    </div>
+                    <div id="aspect-dynamic-content" class="hidden space-y-6">
+                        
+                        <div class="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+                            <h4 id="aspect-bar-chart-title" class="text-lg font-medium text-black mb-2 text-center">Sentiment Distribution</h4>
+                            <div id="aspectBarChart" class="w-full h-80"></div>
+                            <div id="aspect-bar-explanation" class="p-3 mt-2 bg-white border border-black text-black text-sm rounded-lg"></div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+                            <h4 id="aspect-star-chart-title" class="text-lg font-medium text-black mb-2 text-center">Sentiment Radar</h4>
+                            <div id="aspectStarChart" class="w-full h-80"></div>
+                            <div id="aspect-star-explanation" class="p-3 mt-2 bg-white border border-black text-black text-sm rounded-lg"></div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+                            <h4 id="aspect-wordcloud-title" class="text-lg font-medium text-black mb-2 text-center">Most Frequent Words</h4>
+                            <div id="aspectWordCloudContainer" class="w-full h-64 flex items-center justify-center"></div>
+                            <div id="aspect-wordcloud-explanation" class="p-3 mt-2 bg-white border border-black text-black text-sm rounded-lg"></div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="p-6 bg-white rounded-xl shadow-lg">
+        <h2 class="text-3xl font-semibold text-black mb-6 text-center">{{ platform_name }} Aspect Comparison</h2>
+        <div class="max-w-3xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 items-end">
+                <div>
+                    <label for="aspect1-selector" class="block text-sm font-medium text-black">Select Aspect 1</label>
+                    <select id="aspect1-selector" class="mt-1 block w-full p-2 border-2 border-gray-400 rounded-md shadow-sm bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        {% for aspect in aspect_list %}<option value="{{ aspect }}">{{ aspect }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="aspect2-selector" class="block text-sm font-medium text-black">Select Aspect 2</label>
+                    <select id="aspect2-selector" class="mt-1 block w-full p-2 border-2 border-gray-400 rounded-md shadow-sm bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        {% for aspect in aspect_list %}<option value="{{ aspect }}" {% if loop.index == 2 %}selected{% endif %}>{{ aspect }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="text-center">
+                <button id="compare-btn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition shadow-md">Compare Aspects</button>
+            </div>
+        </div>
+        <div id="comparison-results-area" class="mt-8 hidden">
+            <div id="comparison-placeholder" class="text-center text-black font-bold mb-4"></div>
+            <div id="comparison-content" class="hidden space-y-6">
+            <!-- Conclusion -->
+            <div id="comparison-conclusion" class="p-4 bg-white border border-black rounded-lg">
+                <p id="comparison-conclusion-text" class="text-black font-bold"></p>
+                <p id="comparison-conclusion-explanation" class="text-sm text-black mt-1"></p>
+            </div>
+
+            <!-- Raw Data Comparison -->
+            <div class="p-4 border border-gray-300 rounded-xl bg-gray-50 shadow-md">
+                <h3 class="text-xl font-semibold text-black mb-4 border-b pb-2">Raw Data Comparison</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="p-4 border rounded-lg bg-white shadow-sm">
+                        <h4 class="text-lg font-medium text-black mb-2 text-center">Total Reviews</h4>
+                        <div id="comparisonDataTable" class="overflow-x-auto"></div>
+                    </div>
+                    <div class="p-4 border rounded-lg bg-white shadow-sm">
+                        <h4 id="comparisonBarChartTitle" class="text-lg font-medium text-black mb-2 text-center"></h4>
+                        <div id="comparisonBarChart" class="w-full h-64"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytical Insights -->
+            <div class="p-4 border border-gray-300 rounded-xl bg-gray-50 shadow-md">
+                <h3 class="text-xl font-semibold text-black mb-4 border-b pb-2">Analytical Insights</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="p-4 border rounded-lg bg-white shadow-sm">
+                        <h4 class="text-lg font-medium text-black mb-2 text-center">Key Metrics</h4>
+                        <div id="comparisonMetrics" class="pt-2"></div>
+                    </div>
+                    <div class="p-4 border rounded-lg bg-white shadow-sm">
+                        <h4 class="text-lg font-medium text-black mb-2 text-center">Positive Sentiment Percentage</h4>
+                        <div id="comparisonBulletChart" class="space-y-4 pt-2"></div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const platformName = "{{ platform_name }}";
+    
+    function renderPlot(elementId, jsonData, errorMessage) {
+         const element = document.getElementById(elementId);
+        if (!element) return;
+        try {
+            const chartData = JSON.parse(jsonData);
+            const hasData = chartData.data && chartData.data.length > 0 &&
+                chartData.data.some(trace =>
+                    (trace.values && trace.values.some(v => v > 0)) ||
+                    (trace.y && Array.isArray(trace.y) && trace.y.some(v => v > 0))
+                );
+            if (hasData) {
+                Plotly.newPlot(element, chartData.data, chartData.layout, { responsive: true });
+            } else {
+                element.innerHTML = `<p class="text-center text-black p-4">${errorMessage}</p>`;
+            }
+        } catch (e) {
+            console.error(`Error rendering ${elementId}:`, e);
+            element.innerHTML = '<p class="text-center text-red-500 p-4">Could not render chart.</p>';
+        }
+    }
+
+    renderPlot('platformPieChart', '{{ main_charts_data.pie_chart_json | safe }}', 'No sentiment data available.');
+    renderPlot('platformLineChart', '{{ main_charts_data.line_chart_json | safe }}', 'No trend data available.');
+
+    function showPlaceholder(elementId, message) {
+        document.getElementById(elementId).innerHTML = `<div class="text-center text-black p-20"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">${message}</p></div>`;
+    }
+
+    window.toggleInfo = (elementId) => document.getElementById(elementId).classList.toggle('hidden');
+
+    const aspectSelector = document.getElementById('aspect-selector');
+    const aspectPlaceholder = document.getElementById('aspect-placeholder');
+    const aspectDynamicContent = document.getElementById('aspect-dynamic-content');
+
+    aspectSelector.addEventListener('change', function() {
+        const selectedAspect = this.value;
+        aspectDynamicContent.classList.add('hidden');
+        aspectPlaceholder.classList.remove('hidden');
+
+        if (!selectedAspect) {
+            aspectPlaceholder.innerHTML = '<div class="text-center text-black pt-20"><i class="fas fa-arrow-up fa-2x mb-2"></i><p>Select an aspect to view its detailed visuals.</p></div>';
+            return;
+        }
+
+        // Update titles dynamically
+        document.getElementById('aspect-bar-chart-title').textContent = `Bar Chart: ${selectedAspect} Sentiment Distribution`;
+        document.getElementById('aspect-star-chart-title').textContent = `Star Plot: ${selectedAspect} Sentiment Radar`;
+        document.getElementById('aspect-wordcloud-title').textContent = `Word Cloud: ${selectedAspect} Most Frequent Words`;
+
+        showPlaceholder('aspect-placeholder', `Loading ${selectedAspect} data...`);
+
+        // Fetch data from the backend
+        fetch('/get_aspect_details', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ platform: platformName, aspect: selectedAspect })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+
+            aspectPlaceholder.classList.add('hidden');
+            aspectDynamicContent.classList.remove('hidden');
+
+            // Render the charts
+            Plotly.react('aspectBarChart', JSON.parse(data.bar_chart_json).data, JSON.parse(data.bar_chart_json).layout, { responsive: true });
+            Plotly.react('aspectStarChart', JSON.parse(data.star_plot_json).data, JSON.parse(data.star_plot_json).layout, { responsive: true });
+            
+            // Render the word cloud
+            const wcContainer = document.getElementById('aspectWordCloudContainer');
+            wcContainer.innerHTML = data.wordcloud_image ? `<img src="data:image/png;base64,${data.wordcloud_image}" ...>` : '<p>Not enough data</p>';
+            
+            // === REFINEMENT: Populate the new explanation boxes with dynamic text ===
+            document.getElementById('aspect-bar-explanation').innerHTML = data.bar_chart_explanation || 'No details available.';
+            document.getElementById('aspect-star-explanation').innerHTML = data.star_chart_explanation || 'No details available.';
+            document.getElementById('aspect-wordcloud-explanation').innerHTML = data.wordcloud_explanation || 'No details available.';
+        })
+        .catch(error => {
+            console.error('Error fetching aspect details:', error);
+            aspectPlaceholder.innerHTML = `<p class="text-red-500 ...">Error loading data.</p>`;
+        });
+    });
+
+    const compareBtn = document.getElementById('compare-btn');
+    const resultsArea = document.getElementById('comparison-results-area');
+    const compPlaceholder = document.getElementById('comparison-placeholder');
+    const compContent = document.getElementById('comparison-content');
+
+    compareBtn.addEventListener('click', function() {
+        const aspect1 = document.getElementById('aspect1-selector').value;
+        const aspect2 = document.getElementById('aspect2-selector').value;
+
+        resultsArea.classList.remove('hidden');
+        compContent.classList.add('hidden');
+        compPlaceholder.classList.remove('hidden');
+
+        if (aspect1 === aspect2) {
+            compPlaceholder.innerHTML = '<p class="text-red-500">Please select two different aspects.</p>';
+            return;
+        }
+
+        showPlaceholder('comparison-placeholder', `Comparing ${aspect1} and ${aspect2}...`);
+
+        fetch('/compare_aspects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ platform: platformName, aspect1: aspect1, aspect2: aspect2 })
+        })
+        .then(response => {
+            if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+
+            compPlaceholder.classList.add('hidden');
+            compContent.classList.remove('hidden');
+
+            document.getElementById('comparisonBarChartTitle').textContent = `Bar Chart: ${aspect1} vs ${aspect2}`;
+            document.getElementById('comparison-conclusion-text').innerHTML = data.conclusion.text;
+            document.getElementById('comparison-conclusion-explanation').innerHTML = data.conclusion.explanation;
+
+            // --- NEW: Reusable function to build a table ---
+            function renderComparisonTable(containerId, tableData) {
+                const container = document.getElementById(containerId);
+                if (!container || !tableData) return;
+
+                let tableHtml = '<table class="min-w-full table-fixed">';
+                
+                // Table Header (with bold font and borders)
+                tableHtml += '<thead class="bg-gray-100"><tr>';
+                tableData.headers.forEach(h => {
+                    tableHtml += `<th class="px-4 py-3 text-left text-xs font-bold text-black uppercase tracking-wider border-b-2 border-gray-200 border-r border-gray-200">${h}</th>`;
+                });
+                tableHtml += '</tr></thead>';
+                
+                // Table Body (with column borders and consistent row styling)
+                tableHtml += '<tbody class="bg-white divide-y divide-gray-200">';
+                tableData.rows.forEach(row => {
+                    // Removed the 'is_bold' logic for consistent styling
+                    tableHtml += '<tr>';
+                    // Style the first column (the label) to be slightly more prominent
+                    tableHtml += `<td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-black border-r border-gray-200">${row.label}</td>`;
+                    
+                    // Style the data columns
+                    row.values.forEach(val => {
+                        tableHtml += `<td class="px-4 py-2 whitespace-nowrap text-sm text-right text-black border-r border-gray-200">${val}</td>`;
+                    });
+                    tableHtml += '</tr>';
+                });
+                tableHtml += '</tbody></table>';
+                container.innerHTML = tableHtml;
+            }
+
+            // --- Call the function twice to render both new tables ---
+            renderComparisonTable('comparisonDataTable', data.visuals.data_table_data);
+            renderComparisonTable('comparisonMetrics', data.visuals.key_metrics_data);
+
+            // The code for the Bar Chart and Bullet Chart remains the same
+            Plotly.react('comparisonBarChart', JSON.parse(data.visuals.bar_chart_json).data, JSON.parse(data.visuals.bar_chart_json).layout, { responsive: true });
+
+            let bulletHtml = data.visuals.bullet_chart_data.map(item =>
+                `<div class="mb-2"><div class="flex justify-between mb-1"><span class="text-base font-medium">${item.name}</span><span class="text-sm font-medium">${item.value.toFixed(1)}%</span></div><div class="w-full bg-gray-200 rounded-full h-4"><div class="bg-blue-600 h-4 rounded-full" style="width: ${item.value}%"></div></div></div>`
+            ).join('');
+            document.getElementById('comparisonBulletChart').innerHTML = bulletHtml;
+        })
+        .catch(error => {
+            console.error("Comparison Error:", error);
+            compPlaceholder.innerHTML = `<p class="text-red-500">${error.message || 'An error occurred.'}</p>`;
+        });
+    });
+});
+</script>
+
+{% endblock %}

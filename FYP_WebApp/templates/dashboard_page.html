@@ -1,0 +1,275 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard - {{ page_title }}{% endblock %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+
+    <header class="mb-10 flex justify-center">
+        <div class="inline-block px-6 py-4 border-4 border-gray-300 rounded-xl bg-white shadow-md text-center">
+            <h1 class="text-4xl font-bold text-black">MOOC Review Insights</h1>
+            <p class="mt-2 text-lg text-black">{{ page_explanation }}</p>
+        </div>
+    </header>
+
+    <!-- Section 1: Overall Word Clouds -->
+    <section class="mb-12 bg-white p-6 rounded-xl shadow-lg">
+    <div class="flex justify-center mb-4">
+        <div class="inline-block px-6 py-3 border-4 border-gray-300 rounded-xl bg-white shadow text-center">
+            <h2 class="text-2xl font-semibold text-black">Word Clouds: Overall Most Frequent Mentioned Words</h2>
+        </div>
+    </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <!-- Positive Word Cloud Box -->
+            <div class="p-4 rounded-lg shadow-md text-center bg-white border-4 border-green-500">
+                <div class="flex items-center justify-center mb-2 info-box-container">
+                <h3 class="text-lg font-semibold text-black">Overall Positive Sentiment</h3>
+                <i class="fas fa-info-circle text-blue-500 ml-2 cursor-pointer info-button" onclick="toggleInfo('positive-wc-info')"></i>
+                <div id="positive-wc-info" class="info-box-popup hidden p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-sm shadow-lg">
+                    This word cloud highlights the most frequent terms within reviews classified with positive sentiment. Larger words indicate higher frequency and point to the key drivers of user satisfaction.
+                </div>
+                </div>
+                <div class="w-full h-56 flex items-center justify-center">
+                {% if overall_positive_wordcloud %}
+                    <img src="data:image/png;base64,{{ overall_positive_wordcloud }}" alt="Positive Word Cloud">
+                {% else %}
+                    <p class="text-black">No data</p>
+                {% endif %}
+                </div>
+            </div>
+
+            <!-- Neutral Word Cloud Box -->
+            <div class="p-4 rounded-lg shadow-md text-center bg-white border-4 border-yellow-500">
+                <div class="flex items-center justify-center mb-2 info-box-container">
+                <h3 class="text-lg font-semibold text-black">Overall Neutral Sentiment</h3>
+                <i class="fas fa-info-circle text-blue-500 ml-2 cursor-pointer info-button" onclick="toggleInfo('neutral-wc-info')"></i>
+                <div id="neutral-wc-info" class="info-box-popup hidden p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-sm shadow-lg">
+                    This word cloud displays common terms from reviews with neutral or objective sentiment. These words often relate to factual descriptions of course components.
+                </div>
+                </div>
+                <div class="w-full h-56 flex items-center justify-center">
+                {% if overall_neutral_wordcloud %}
+                    <img src="data:image/png;base64,{{ overall_neutral_wordcloud }}" alt="Neutral Word Cloud">
+                {% else %}
+                    <p class="text-black">No data</p>
+                {% endif %}
+                </div>
+            </div>
+
+            <!-- Negative Word Cloud Box -->
+            <div class="p-4 rounded-lg shadow-md text-center bg-white border-4 border-red-500">
+                <div class="flex items-center justify-center mb-2 info-box-container">
+                <h3 class="text-lg font-semibold text-black">Overall Negative Sentiment</h3>
+                <i class="fas fa-info-circle text-blue-500 ml-2 cursor-pointer info-button" onclick="toggleInfo('negative-wc-info')"></i>
+                <div id="negative-wc-info" class="info-box-popup hidden p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-sm shadow-lg">
+                    This word cloud shows the most common terms found in negatively-classified reviews. Larger words point to significant areas of user dissatisfaction.
+                </div>
+                </div>
+                <div class="w-full h-56 flex items-center justify-center">
+                {% if overall_negative_wordcloud %}
+                    <img src="data:image/png;base64,{{ overall_negative_wordcloud }}" alt="Negative Word Cloud">
+                {% else %}
+                    <p class="text-black">No data</p>
+                {% endif %}
+                </div>
+            </div>
+
+            </div>
+    </section>
+
+    <!-- Section 2: Overall Charts -->
+    <section class="mb-12 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+            <div class="flex items-center justify-center mb-4 info-box-container">
+                <h2 class="text-2xl font-semibold text-black">Pie Chart: Overall Sentiment Distribution</h2>
+                <i class="fas fa-info-circle text-blue-500 ml-2 cursor-pointer info-button" onclick="toggleInfo('pie-chart-info')"></i>
+                <div id="pie-chart-info" class="info-box-popup hidden p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-sm shadow-lg">
+                    {{ pie_chart_explanation | safe }}
+                </div>
+            </div>
+            <div id="overallPieChart" class="w-full h-96"></div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+            <div class="flex items-center justify-center mb-4 info-box-container">
+                <h2 class="text-2xl font-semibold text-black">Line Chart: Overall Sentiment Trends Over Time</h2>
+                <i class="fas fa-info-circle text-blue-500 ml-2 cursor-pointer info-button" onclick="toggleInfo('line-chart-info')"></i>
+                <div id="line-chart-info" class="info-box-popup hidden p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-sm shadow-lg">
+                    {{ line_chart_explanation | safe }}
+                </div>
+            </div>
+            <div id="sentimentLineChart" class="w-full h-96"></div>
+        </div>
+    </section>
+
+    <!-- Section 3: Interactive Aspect Explorer -->
+    <section class="mb-12 bg-white p-6 rounded-xl shadow-lg">
+        <!-- Add a flex wrapper for centering the boxed title -->
+        <div class="flex justify-center mb-4">
+            <div class="inline-block px-6 py-3 border-4 border-gray-300 rounded-xl bg-white shadow text-center">
+                <h2 class="text-2xl font-semibold text-black">Explore Sentiments & Topics by Aspect</h2>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 items-end max-w-4xl mx-auto">
+            <div>
+                <label for="aspectSelect" class="block text-sm font-medium text-black mb-1">Select Aspect:</label>
+                <select id="aspectSelect" class="block w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                    <option value="" selected disabled>-- Choose an Aspect --</option>
+                    {% for aspect in aspect_list_for_explorer %}
+                        <option value="{{ aspect }}">{{ aspect }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="vizTypeSelect" class="block text-sm font-medium text-black mb-1">Select Visualization:</label>
+                <select id="vizTypeSelect" class="block w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                    <option value="" selected disabled>-- Choose Visualization --</option>
+                    <option value="Sentiment Distribution">Bar Chart: Overall Sentiment Distribution</option>
+                    <option value="Most Frequent Mentioned Words">Word Clouds: Overall Most Frequent Mentioned Words</option>
+                </select>
+            </div>
+        </div>
+        <div class="text-center mb-4">
+            <button id="showVizButton" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md disabled:opacity-50" disabled>Show Visualization</button>
+        </div>
+
+        <!-- Two-column layout for results -->
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Left Column: Visualization Result -->
+            <div id="aspectVisualizationArea" class="md:col-span-2 p-4 bg-gray-50 rounded-lg min-h-[400px] flex items-center justify-center border border-gray-200 shadow-inner">
+                <p id="aspectExplorerPlaceholder" class="text-black">Please choose an aspect and a visualization type to see the results.</p>
+                <div id="aspectChartDiv" class="w-full h-full hidden"></div>
+                <div id="aspectWordCloudDiv" class="w-full h-full hidden flex items-center justify-center">
+                    <img id="aspectWordCloudImage" src="" alt="Aspect Word Cloud" class="mx-auto max-w-full max-h-full object-contain">
+                </div>
+            </div>
+            <!-- Right Column: Dynamic Explanation -->
+            <div id="aspectExplanationArea" class="md:col-span-1 p-6 bg-blue-50 border border-blue-200 rounded-lg hidden">
+                <div id="aspectExplanationContent" class="space-y-4 text-sm text-black text-justify">
+                    <!-- Dynamic content will be injected here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("Dashboard script loaded.");
+
+    function renderPlot(element, jsonData, chartName, noDataMessage) {
+        const chartDiv = (typeof element === 'string') ? document.getElementById(element) : element;
+        if (!chartDiv) {
+            console.error(`Chart container '${element}' not found.`);
+            return;
+        }
+
+        try {
+            const chartData = JSON.parse(jsonData);
+            
+            // Check if there's any data to plot
+            const hasData = chartData.data && chartData.data.length > 0 &&
+                            chartData.data.some(trace =>
+                                (trace.values && trace.values.some(v => v > 0)) ||
+                                (trace.y && Array.isArray(trace.y) && trace.y.some(v => v > 0))
+                            );
+
+            if (hasData) {
+                Plotly.newPlot(chartDiv, chartData.data, chartData.layout, { responsive: true });
+            } else {
+                chartDiv.innerHTML = `<p class="text-center text-black p-4">${noDataMessage}</p>`;
+            }
+        } catch (e) {
+            console.error(`Error processing ${chartName}`, e, "Raw JSON:", jsonData);
+            chartDiv.innerHTML = `<p class="text-center text-red-500 p-4">Error rendering ${chartName.toLowerCase()}.</p>`;
+        }
+    }
+
+    renderPlot('overallPieChart', '{{ overall_pie_data_json | safe }}', 'Overall Pie Chart', 'No data for overall sentiment distribution.');
+    renderPlot('sentimentLineChart', '{{ line_chart_data_json | safe }}', 'Line Chart', 'No data for sentiment trends.');
+
+    // --- Interactive Aspect Explorer Logic ---
+    const aspectSelect = document.getElementById('aspectSelect');
+    const vizTypeSelect = document.getElementById('vizTypeSelect');
+    const showVizButton = document.getElementById('showVizButton');
+    const vizPlaceholder = document.getElementById('aspectExplorerPlaceholder');
+    const chartDiv = document.getElementById('aspectChartDiv');
+    const wordCloudDiv = document.getElementById('aspectWordCloudDiv');
+    const wordCloudImage = document.getElementById('aspectWordCloudImage');
+
+    function checkSelections() {
+        showVizButton.disabled = !(aspectSelect.value && vizTypeSelect.value);
+    }
+
+    aspectSelect.addEventListener('change', checkSelections);
+    vizTypeSelect.addEventListener('change', checkSelections);
+
+    showVizButton.addEventListener('click', function() {
+        const selectedAspect = aspectSelect.value;
+        const selectedVizType = vizTypeSelect.value;
+
+        // Reset display
+        vizPlaceholder.textContent = 'Loading visualization...';
+        vizPlaceholder.classList.remove('hidden');
+        chartDiv.classList.add('hidden');
+        wordCloudDiv.classList.add('hidden');
+        chartDiv.innerHTML = ""; // Clear previous chart
+        wordCloudImage.src = ''; // Clear previous image
+
+        fetch("{{ url_for('main.get_aspect_visualization') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ aspect: selectedAspect, viz_type: selectedVizType }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            vizPlaceholder.classList.add('hidden'); // Hide loading/placeholder text
+
+            const explanationArea = document.getElementById('aspectExplanationArea');
+            const explanationContent = document.getElementById('aspectExplanationContent');
+
+            // Hide explanation area by default
+            explanationArea.classList.add('hidden');
+            explanationContent.innerHTML = '';
+
+            if (data.error) {
+                vizPlaceholder.textContent = `Error: ${data.error}`;
+                vizPlaceholder.classList.remove('hidden');
+            } else if (data.message) {
+                vizPlaceholder.textContent = data.message;
+                vizPlaceholder.classList.remove('hidden');
+            } else {
+                // If there's chart or wordcloud data, show and populate the explanation
+                if (data.explanation_html) {
+                    explanationContent.innerHTML = data.explanation_html;
+                    explanationArea.classList.remove('hidden');
+                }
+
+                if (selectedVizType === "Sentiment Distribution" && data.chart_json) {
+                    chartDiv.classList.remove('hidden');
+                    renderPlot(chartDiv, data.chart_json, 'Aspect Bar Chart', `No data for ${selectedAspect}.`);
+                } else if (selectedVizType === "Most Frequent Mentioned Words" && data.wordcloud_image) {
+                    wordCloudImage.src = "data:image/png;base64," + data.wordcloud_image;
+                    wordCloudDiv.classList.remove('hidden');
+                } else {
+                    vizPlaceholder.textContent = `No visualization data received for ${selectedAspect}.`;
+                    vizPlaceholder.classList.remove('hidden');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching aspect visualization:', error);
+            vizPlaceholder.textContent = 'Failed to load visualization. Please try again.';
+            vizPlaceholder.classList.remove('hidden');
+        });
+    });
+});
+</script>
+
+{% endblock %}

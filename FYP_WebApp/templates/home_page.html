@@ -1,0 +1,108 @@
+{% extends "layout.html" %}
+
+{% block title %} Home - MOOC Overview{% endblock %}
+
+{% block page_title %} Home {% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+
+    <header class="mb-12 text-center">
+        <div class="inline-block px-6 py-4 border-4 border-gray-400 rounded-xl bg-white shadow-md">
+            <h1 class="text-4xl font-bold text-gray-800">MOOC Platform Overview</h1>
+            <p class="mt-2 text-lg text-black">
+            Explore insights and sentiment analysis for leading MOOC platforms based on Quora discussions
+            </p>
+        </div>
+    </header>
+
+    <div class="space-y-6">
+        <!-- Coursera Dropdown -->
+        <div class="bg-white rounded-xl shadow-lg transition-shadow duration-300">
+            <button class="w-full flex items-center justify-between p-6 text-left focus:outline-none" onclick="toggleDropdown('coursera-content', 'coursera-arrow')">
+                <div class="flex items-center">
+                    <img src="{{ url_for('static', filename='images/coursera logo.png') }}" alt="Coursera Logo" class="h-16 w-16 mr-4 rounded-md object-contain">
+                    <h2 class="text-2xl font-semibold text-blue-700">Coursera</h2>
+                </div>
+                <i id="coursera-arrow" class="fas fa-chevron-down text-blue-700 transition-transform duration-300"></i>
+            </button>
+            <div id="coursera-content" class="dropdown-content text-justify px-6">
+                <p class="text-black leading-relaxed mb-3">
+                    Coursera was co-founded by Stanford University computer science professors Andrew Ng and Daphne Koller in 2012. It has established itself as a leading Massive Open Online Course (MOOC) provider, often regarded as a pioneer whose success has significantly influenced the growth and development of other MOOC platforms globally. Coursera's model is built on partnerships with over 200 of the world's top universities and industry-leading companies.
+                </p>
+                <p class="text-black leading-relaxed mb-3">
+                    These collaborations allow Coursera to offer a diverse range of learning experiences, from individual courses and hands-on projects to specialized certificate programs and full online degrees. The platform aims to provide flexible, affordable, and job-relevant education accessible to individuals and organizations worldwide, thereby contributing to the international agenda of making quality education and lifelong learning opportunities available to all.
+                </p>
+                <p class="text-black leading-relaxed mb-4">
+                    The platform's extensive catalog covers a multitude of disciplines, catering to a global audience seeking to enhance their skills, advance their careers, or pursue academic interests. Its association with prestigious institutions lends credibility to its offerings, making it a popular choice for learners seeking high-quality online education.
+                </p>
+                <div class="mt-4 text-right">
+                    <a href="https://www.coursera.org" target="_blank" rel="noopener noreferrer" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transform transition-transform duration-200 hover:scale-105 text-sm">
+                        Visit Coursera <i class="fas fa-external-link-alt ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- edX Dropdown -->
+        <div class="bg-white rounded-xl shadow-lg transition-shadow duration-300">
+            <button class="w-full flex items-center justify-between p-6 text-left focus:outline-none" onclick="toggleDropdown('edx-content', 'edx-arrow')">
+                <div class="flex items-center">
+                    <img src="{{ url_for('static', filename='images/edx logo.png') }}" alt="edX Logo" class="h-16 w-auto mr-4 object-contain">
+                    <h2 class="text-2xl font-semibold text-red-700">edX</h2>
+                </div>
+                <i id="edx-arrow" class="fas fa-chevron-down text-red-700 transition-transform duration-300"></i>
+            </button>
+            <div id="edx-content" class="dropdown-content text-justify px-6">
+                <p class="text-black leading-relaxed mb-3">
+                    Founded in 2012 by Harvard University and the Massachusetts Institute of Technology (MIT), edX is a non-profit organization dedicated to transforming education by increasing access to high-quality learning. It hosts courses from many of the world's top-ranked universities and industry leaders, serving over 20 million learners globally. edX also provides an open-source platform called Open edX, which allows other institutions to offer their own online learning experiences.
+                </p>
+                <p class="text-black leading-relaxed mb-3">
+                    A distinguishing feature of edX is its commitment to offering a significant portion of its courses for free. According to Patra et al. (2022), approximately 85.08% of edX courses are available without charge, a higher percentage compared to other major platforms like Coursera and Udemy. This focus on accessibility aligns with its mission to remove barriers of cost and location in education.
+                </p>
+                <p class="text-black leading-relaxed mb-4">
+                    The platform offers a wide array of programs, including individual courses, MicroMasters® programs, Professional Certificates, and XSeries, designed to help learners develop new skills, advance their careers, or explore academic interests. The sheer number of MOOC platforms and courses available, however, can make it challenging for learners to choose the most suitable options, highlighting the need for analytical tools to aid in decision-making.
+                </p>
+                <div class="mt-4 text-right">
+                    <a href="https://www.edx.org" target="_blank" rel="noopener noreferrer" class="inline-block bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transform transition-transform duration-200 hover:scale-105 text-sm">
+                        Visit edX <i class="fas fa-external-link-alt ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Udemy Dropdown -->
+        <div class="bg-white rounded-xl shadow-lg transition-shadow duration-300">
+            <button class="w-full flex items-center justify-between p-6 text-left focus:outline-none" onclick="toggleDropdown('udemy-content', 'udemy-arrow')">
+                <div class="flex items-center">
+                    <img src="{{ url_for('static', filename='images/udemy logo.png') }}" alt="Udemy Logo" class="h-16 w-16 mr-4 rounded-md object-contain">
+                    <h2 class="text-2xl font-semibold text-purple-700">Udemy</h2>
+                </div>
+                <i id="udemy-arrow" class="fas fa-chevron-down text-purple-700 transition-transform duration-300"></i>
+            </button>
+            <div id="udemy-content" class="dropdown-content text-justify px-6">
+                <p class="text-black leading-relaxed mb-3">
+                    Udemy, founded by Eren Bali, operates as a global online learning and teaching marketplace. It boasts an extensive library of over 155,000 courses taught by expert instructors, covering a vast range of topics in diverse languages. The platform is designed to empower students to master new skills and achieve their personal and professional goals.
+                </p>
+                <p class="text-black leading-relaxed mb-3">
+                    Unlike many MOOC platforms that primarily collaborate with academic institutions, Udemy's model is more focused on practical, job-related skills. Many of its courses are created by individual experts, professionals, and practitioners in their respective fields. This approach allows for a wide variety of specialized content, from technology and business to arts and personal development.
+                </p>
+                <p class="text-black leading-relaxed mb-4">
+                    While Udemy offers numerous courses for purchase, it also provides a selection of free courses, contributing to its accessibility. Its emphasis on skill-based learning makes it a popular choice for individuals looking to acquire specific competencies for career advancement or personal enrichment.
+                </p>
+                <div class="mt-4 text-right">
+                    <a href="https://www.udemy.com" target="_blank" rel="noopener noreferrer" class="inline-block bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transform transition-transform duration-200 hover:scale-105 text-sm">
+                        Visit Udemy <i class="fas fa-external-link-alt ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="mt-16 text-center text-gray-500 text-sm">
+        <p>Navigate to the <a href="{{ url_for('main.dashboard_page') }}" class="text-blue-600 hover:underline">Dashboard</a> to see overall sentiment analysis or select a platform for detailed insights</p>
+    </footer>
+
+</div>
+{% endblock %}

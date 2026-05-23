@@ -1,0 +1,467 @@
+{% extends "layout.html" %}
+
+{% block title %} MOOC Recommendation {% endblock %}
+
+{% block page_title %} Get a MOOC Recommendation {% endblock %}
+
+{% block content %}
+<div class="px-6 py-4 bg-white border border-gray-300 rounded-xl shadow mb-10 text-center max-w-3xl mx-auto">
+  <h1 class="text-4xl font-bold text-black">Analysis Hub</h1>
+  <p class="mt-2 text-lg text-black">Explore recommendations, rankings, and comparisons for MOOC platforms</p>
+</div>
+
+    <!-- Tab Navigation -->
+    <div class="mb-6 border-b border-gray-200">
+        <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
+            <li class="mr-2" role="presentation">
+                <button class="inline-block p-4 rounded-t-lg tab-button active" id="recommendation-tab" type="button" role="tab" onclick="switchTab('recommendation')">
+                    Get Recommendation
+                </button>
+            </li>
+            <li class="mr-2" role="presentation">
+                <button class="inline-block p-4 rounded-t-lg tab-button" id="ranking-tab" type="button" role="tab" onclick="switchTab('ranking')">
+                    Platform Ranking
+                </button>
+            </li>
+            <li role="presentation">
+                <button class="inline-block p-4 rounded-t-lg tab-button" id="comparison-tab" type="button" role="tab" onclick="switchTab('comparison')">
+                    Platform Comparison
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Tab Content Panes -->
+    <div id="tabContent">
+        <!-- Tool 1: Get Single Recommendation -->
+        <div class="tab-pane" id="recommendation-pane" role="tabpanel">
+            <section class="bg-white p-6 md:p-8 rounded-xl shadow-lg max-w-2xl mx-auto">
+                <div class="inline-block px-6 py-4 bg-white border border-gray-300 rounded-xl shadow mb-6 text-center">
+                    <h2 class="text-2xl font-semibold text-black mb-2">Get Single Best Platform</h2>
+                    <p class="text-black">Select your most preferred aspect to get a platform recommendation</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('main.recommendation_page') }}">
+                    <div class="mb-6">
+                        <label for="aspect_select" class="block text-lg font-medium text-black mb-2">Choose an Aspect:</label>
+                        <select name="selected_aspect" id="aspect_select" class="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg">
+                            <option value="" disabled {% if not selected_aspect %}selected{% endif %}>-- Select an Aspect --</option>
+                            {% for aspect in aspects_list %}
+                                <option value="{{ aspect }}" {% if aspect == selected_aspect %}selected{% endif %}>{{ aspect }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg text-lg shadow-md">
+                            Get Recommendation <i class="fas fa-lightbulb ml-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </section>
+            
+            <!-- Result Section -->
+            {% if request.method == 'POST' and recommended_platform %}
+                <section class="mt-12 max-w-4xl mx-auto p-6 md:p-8 rounded-xl shadow-lg">
+                    <!-- NEW: Outer box for heading + logo + platform -->
+                    <div class="bg-white border border-gray-300 rounded-xl shadow-md p-6 mb-6 text-center">
+                        <h2 class="text-3xl font-semibold mb-4 text-black">
+                        Our Recommendation for '{{ selected_aspect }}'
+                        </h2>
+                        <img src="{{ url_for('static', filename='images/' + recommended_platform.logo) }}" alt="{{ recommended_platform.name }} Logo"
+                        class="h-24 w-auto mx-auto mb-4">
+                        <p class="text-4xl font-bold text-black">{{ recommended_platform.name }}</p>
+                    </div>
+
+                    <!-- Explanation box -->
+                    <div class="bg-white border border-black rounded-lg p-4 text-center mb-10">
+                        {{ recommended_platform.explanation | safe }}
+                    </div>
+
+                    <!-- Sentiment charts -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center mb-10">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                        <h3 class="text-xl font-semibold text-center mb-3">Pie Chart: Sentiment Distribution</h3>
+                        <div id="recommendationPieChart" class="w-full h-80"></div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                        <h3 class="text-xl font-semibold text-center mb-3">Star Plot: Sentiment Radar</h3>
+                        <div id="recommendationStarChart" class="w-full h-80"></div>
+                        </div>
+                    </div>
+
+                    <!-- Full comparison -->
+                    <div class="mt-8">
+                        <h3 class="text-2xl font-semibold text-center text-gray-700 mb-4">Full Platform Comparison</h3>
+                        <div class="max-w-md mx-auto bg-white p-4 rounded-lg shadow">
+                        <ul class="space-y-3">
+                            {% for platform in all_platform_scores %}
+                            <li class="flex items-center justify-between p-3 rounded-md {% if platform.name == recommended_platform.name %}bg-green-100{% else %}bg-gray-50{% endif %}">
+                            <div class="flex items-center">
+                                <img src="{{ url_for('static', filename='images/' + platform.logo) }}" alt="{{ platform.name }} Logo"
+                                class="h-8 w-8 mr-3">
+                                <span class="font-semibold">{{ platform.name }}</span>
+                            </div>
+                            <span class="font-bold text-lg">{{ "%.1f"|format(platform.positive_percentage) }}%</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        </div>
+                    </div>
+                    </section>
+            {% elif request.method == 'POST' %}
+                <section class="mt-12 bg-white p-6 md:p-8 rounded-xl shadow-lg text-center">
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">No Clear Recommendation</h2>
+                    <p class="text-gray-600">Could not determine a clear recommendation for '{{ selected_aspect }}'.</p>
+                </section>
+            {% endif %}
+        </div>
+
+        <!-- Tool 2: Platform Ranking -->
+        <div class="tab-pane hidden" id="ranking-pane" role="tabpanel">
+            <section class="bg-white p-6 md:p-8 rounded-xl shadow-lg max-w-3xl mx-auto">
+                <div class="inline-block px-6 py-4 bg-white border border-gray-300 rounded-xl shadow mb-6 text-center">
+                    <h2 class="text-2xl font-semibold text-black mb-2">Rank Platforms by Aspect</h2>
+                    <p class="text-black">See how Coursera, edX, and Udemy stack up against each other for a specific area of interest</p>
+                </div>
+
+
+                <!-- Ranking Controls -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 items-end">
+                    <div>
+                        <label for="rankingAspectSelect" class="block text-sm font-medium text-black mb-1">Select Aspect:</label>
+                        <select id="rankingAspectSelect" class="block w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                            <option value="" selected disabled>-- Choose an Aspect --</option>
+                            {% for aspect in aspects_list %}
+                                <option value="{{ aspect }}">{{ aspect }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="rankingMetricSelect" class="block text-sm font-medium text-black mb-1">Rank by:</label>
+                        <select id="rankingMetricSelect" class="block w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                            <option value="positive_percentage">Highest Positive %</option>
+                            <option value="negative_percentage">Lowest Negative %</option>
+                            <option value="pn_ratio">Best Positive-to-Negative Ratio</option>
+                            <option value="net_score">Highest Net Score (Positive - Negative)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <button id="rankPlatformsBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md disabled:opacity-50" disabled>
+                        Rank Platforms
+                    </button>
+                </div>
+
+                <!-- Ranking Results Area -->
+                <div id="rankingResultArea" class="mt-8">
+                    <!-- Results will be dynamically inserted here -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Tool 3: Platform vs. Platform Comparison -->
+        <div class="tab-pane hidden" id="comparison-pane" role="tabpanel">
+            <section class="bg-white p-6 md:p-8 rounded-xl shadow-lg ">
+                <div class="text-center">
+                    <div class="inline-block px-6 py-4 bg-white border border-gray-300 rounded-xl shadow mb-6">
+                    <h2 class="text-2xl font-semibold text-black mb-2">Platform Comparison</h2>
+                    <p class="text-black">
+                        Directly compare two platforms on a specific aspect to see a detailed breakdown
+                    </p>
+                    </div>
+                </div>
+
+                <!-- Comparison Controls -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 items-end">
+                    <div>
+                        <label for="platformASelect" class="block text-sm font-medium text-black mb-1">Platform A:</label>
+                        <select id="platformASelect" class="block w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                            <option value="Coursera" selected>Coursera</option>
+                            <option value="edX">edX</option>
+                            <option value="Udemy">Udemy</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="platformBSelect" class="block text-sm font-medium text-black mb-1">Platform B:</label>
+                        <select id="platformBSelect" class="block w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                            <option value="Coursera">Coursera</option>
+                            <option value="edX" selected>edX</option>
+                            <option value="Udemy">Udemy</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="comparisonAspectSelect" class="block text-sm font-medium text-black mb-1">Comparison Aspect:</label>
+                        <select id="comparisonAspectSelect" class="block w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                            {% for aspect in aspects_list %}
+                                <option value="{{ aspect }}">{{ aspect }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="text-center">
+                                <button id="comparePlatformsBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md">
+                                    Compare Platforms
+                                </button>
+                            </div>
+
+                            <div id="comparison-results-area" class="mt-8 hidden">
+                                <div id="comparison-placeholder" class="text-center text-gray-500 font-bold mb-4"></div>
+                                <div id="comparison-content" class="hidden space-y-6">
+
+                                    <div id="comparison-conclusion" class="p-4 bg-white border border-black rounded-lg">>
+                                    </div>
+
+                                    <div class="p-4 border border-gray-300 rounded-xl bg-gray-50 shadow-md">
+                                        <h3 class="text-xl font-semibold text-black mb-4 border-b pb-2">Raw Data Comparison</h3>
+                                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                            <div class="p-4 border rounded-lg bg-white shadow-sm">
+                                                <h4 class="text-lg font-medium text-black mb-2 text-center">Total Reviews</h4>
+                                                <div id="comparisonDataTable" class="overflow-x-auto"></div>
+                                            </div>
+                                            <div class="p-4 border rounded-lg bg-white shadow-sm">
+                                                <h4 class="text-lg font-medium text-black mb-2 text-center">Bar Chart: Sentiment Distribution</h4>
+                                                <div id="comparisonBarChart" class="w-full h-64"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-4 border border-gray-300 rounded-xl bg-gray-50 shadow-md">
+                                        <h3 class="text-xl font-semibold text-black mb-4 border-b pb-2">Analytical Insights</h3>
+                                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                            <div class="p-4 border rounded-lg bg-white shadow-sm">
+                                                <h4 class="text-lg font-medium text-black mb-2 text-center">Key Metrics</h4>
+                                                <div id="comparisonMetrics" class="pt-2"></div>
+                                            </div>
+                                            <div class="p-4 border rounded-lg bg-white shadow-sm">
+                                                <h4 class="text-lg font-medium text-black mb-2 text-center">Positive Sentiment Percentage</h4>
+                                                <div id="comparisonBulletChart" class="space-y-4 pt-2"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            </section>
+                    </div>
+
+                <!-- Comparison Results Area -->
+                <div id="comparisonResultArea" class="mt-8 hidden">
+                    <!-- Results will be dynamically inserted here -->
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- This block is intentionally left empty so it doesn't overwrite the layout's main script block -->
+<!-- The main script block in layout.html now contains the switchTab function -->
+
+<!-- Plotly library and the script to draw the charts will be added here -->
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<script>
+    // FIX: This script runs only after the full page is loaded, preventing errors
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if recommended_platform %}
+            try {
+                const pieData = JSON.parse('{{ pie_chart_json | safe }}');
+                Plotly.newPlot('recommendationPieChart', pieData.data, pieData.layout, {responsive: true});
+            } catch (e) {
+                document.getElementById('recommendationPieChart').innerHTML = "<p class='text-red-500'>Error loading Pie Chart.</p>";
+            }
+
+            try {
+                const starData = JSON.parse('{{ star_chart_json | safe }}');
+                Plotly.newPlot('recommendationStarChart', starData.data, starData.layout, {responsive: true});
+            } catch (e) {
+                document.getElementById('recommendationStarChart').innerHTML = "<p class='text-red-500'>Error loading Star Chart.</p>";
+            }
+        {% endif %}
+    });
+
+    // --- ADD THIS SCRIPT FOR THE RANKING TOOL ---
+
+    const rankingAspectSelect = document.getElementById('rankingAspectSelect');
+    const rankingMetricSelect = document.getElementById('rankingMetricSelect');
+    const rankPlatformsBtn = document.getElementById('rankPlatformsBtn');
+    const rankingResultArea = document.getElementById('rankingResultArea');
+
+    function checkRankingSelections() {
+        // Enable the button only if an aspect is chosen
+        rankPlatformsBtn.disabled = !rankingAspectSelect.value;
+    }
+
+    rankingAspectSelect.addEventListener('change', checkRankingSelections);
+
+    rankPlatformsBtn.addEventListener('click', function() {
+        const aspect = rankingAspectSelect.value;
+        const metric = rankingMetricSelect.value;
+
+        // Show a loading message
+        rankingResultArea.innerHTML = `<p class="text-center text-black p-4">Ranking platforms...</p>`;
+
+        fetch("{{ url_for('main.get_platform_ranking') }}", {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ aspect: aspect, metric: metric })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                rankingResultArea.innerHTML = `<p class="text-center text-red-500 p-4">${data.error}</p>`;
+                return;
+            }
+
+            let resultHtml = '<ul class="space-y-4">';
+            data.forEach((platform, index) => {
+                let metric_display = '';
+                // Format the display value based on the metric
+                if (metric === 'positive_percentage' || metric === 'negative_percentage') {
+                    metric_display = `${platform[metric].toFixed(1)}%`;
+                } else if (metric === 'pn_ratio') {
+                    metric_display = platform[metric] === Infinity ? '∞' : platform[metric].toFixed(2);
+                } else {
+                    metric_display = platform[metric];
+                }
+
+                resultHtml += `
+                    <li class="flex items-center p-4 rounded-lg shadow-sm border ${index === 0 ? 'bg-green-50 border-green-300' : 'bg-gray-50'}">
+                        <span class="text-2xl font-bold text-gray-400 w-10">${index + 1}.</span>
+                        <img src="/static/images/${platform.logo}" alt="${platform.name}" class="h-10 w-10 mx-4 rounded-full">
+                        <span class="flex-grow font-semibold text-lg text-gray-800">${platform.name}</span>
+                        <span class="font-bold text-lg ${index === 0 ? 'text-green-600' : 'text-gray-700'}">${metric_display}</span>
+                    </li>
+                `;
+            });
+            resultHtml += '</ul>';
+            rankingResultArea.innerHTML = resultHtml;
+        })
+        .catch(error => {
+            console.error('Error fetching platform ranking:', error);
+            rankingResultArea.innerHTML = `<p class="text-center text-red-500 p-4">An error occurred. Please try again.</p>`;
+        });
+    });
+
+    // --- ADD THIS SCRIPT FOR THE COMPARISON TOOL ---
+
+const comparePlatformsBtn = document.getElementById('comparePlatformsBtn');
+const resultsArea = document.getElementById('comparison-results-area');
+const compPlaceholder = document.getElementById('comparison-placeholder');
+const compContent = document.getElementById('comparison-content');
+
+if (comparePlatformsBtn) {
+    comparePlatformsBtn.addEventListener('click', function() {
+        const platform_a = document.getElementById('platformASelect').value;
+        const platform_b = document.getElementById('platformBSelect').value;
+        const aspect = document.getElementById('comparisonAspectSelect').value;
+        
+        resultsArea.classList.remove('hidden');
+        compContent.classList.add('hidden');
+        compPlaceholder.classList.remove('hidden');
+        
+        if (platform_a === platform_b) {
+            compPlaceholder.innerHTML = '<p class="text-red-500">Please select two different platforms to compare.</p>';
+            return;
+        }
+        
+        compPlaceholder.innerHTML = `<p class="p-20"><i class="fas fa-spinner fa-spin fa-2x"></i><span class="ml-3">Comparing platforms...</span></p>`;
+
+        fetch("{{ url_for('main.compare_platforms') }}", {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ platform_a, platform_b, aspect })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                compPlaceholder.innerHTML = `<p class="text-red-500">${data.error}</p>`;
+                return;
+            }
+
+            compPlaceholder.classList.add('hidden');
+            compContent.classList.remove('hidden');
+
+            // --- Populate the pre-defined HTML structure ---
+            
+            // 1. Populate Conclusion & Similarity
+            const conclusionDiv = document.getElementById('comparison-conclusion');
+            conclusionDiv.innerHTML = `
+                <h3 class="text-lg font-semibold text-black">Conclusion</h3>
+                <p class="text-sm text-black mt-1">${data.comparison_conclusion}</p>
+                <hr class="my-3 border-black">
+                <p class="text-sm text-black"><span class="font-semibold">Review Similarity Score: ${data.similarity.score}</span> — ${data.similarity.explanation}</p>
+            `;
+
+            // 2. Populate Data Table
+            const { headers, rows } = data.visuals.table;
+            let tableHtml = '<table class="min-w-full table-auto text-sm">';
+            tableHtml += '<thead class="bg-gray-100"><tr>' + headers.map(h => `<th class="px-4 py-2 text-left font-semibold text-black uppercase tracking-wider">${h}</th>`).join('') + '</tr></thead>';
+            tableHtml += '<tbody class="bg-white divide-y divide-gray-200">';
+            rows.forEach(row => {
+                tableHtml += '<tr>';
+                // Make the first cell (the metric name) bold
+                tableHtml += `<td class="px-4 py-2 whitespace-nowrap font-bold text-black">${row[0]}</td>`;
+                // Add the rest of the cells
+                tableHtml += `<td class="px-4 py-2 whitespace-nowrap text-black">${row[1]}</td>`;
+                tableHtml += `<td class="px-4 py-2 whitespace-nowrap text-black">${row[2]}</td>`;
+                tableHtml += '</tr>';
+            });
+            tableHtml += '</tbody></table>';
+            document.getElementById('comparisonDataTable').innerHTML = tableHtml;
+
+            // 3. Render Bar Chart
+            setTimeout(function() {
+                const barChartData = JSON.parse(data.visuals.bar_chart_json);
+                Plotly.newPlot('comparisonBarChart', barChartData.data, barChartData.layout, { responsive: true });
+            }, 10);
+
+            // 4. Populate Key Metrics Table
+            const { metrics } = data;
+            // Note the renamed metrics
+            const metricNames = {
+                'positive_percentage': 'Positive Sentiment Percentage',
+                'pn_ratio': 'Positive-to-Negative Ratio',
+                'net_score': 'Net Sentiment Score'
+            };
+            let metricsHtml = '<table class="min-w-full table-auto text-sm">';
+            metricsHtml += '<thead class="bg-gray-100"><tr><th class="px-4 py-2 text-left font-semibold text-black uppercase">Metric</th><th class="px-4 py-2 text-left font-semibold text-black uppercase">' + data.platform_a_name + '</th><th class="px-4 py-2 text-left font-semibold text-black uppercase">' + data.platform_b_name + '</th></tr></thead>';
+            metricsHtml += '<tbody class="bg-white divide-y divide-gray-200">';
+
+            Object.keys(metricNames).forEach(key => {
+                const metricName = metricNames[key];
+                const val_a = metrics[data.platform_a_name][key];
+                const val_b = metrics[data.platform_b_name][key];
+                
+                let formatted_a, formatted_b;
+                if (key === 'pn_ratio') {
+                    // Add ":1" to the P/N Ratio
+                    formatted_a = (val_a === Infinity ? '∞' : val_a.toFixed(2)) + ':1';
+                    formatted_b = (val_b === Infinity ? '∞' : val_b.toFixed(2)) + ':1';
+                } else if (key === 'positive_percentage') {
+                    formatted_a = `${val_a.toFixed(1)}%`;
+                    formatted_b = `${val_b.toFixed(1)}%`;
+                } else {
+                    formatted_a = val_a.toFixed(2);
+                    formatted_b = val_b.toFixed(2);
+                }
+                
+                // Make the first cell (the metric name) bold
+                metricsHtml += `<tr><td class="px-4 py-2 font-bold text-black">${metricName}</td><td class="px-4 py-2 text-black">${formatted_a}</td><td class="px-4 py-2 text-black">${formatted_b}</td></tr>`;
+            });
+            metricsHtml += '</tbody></table>';
+            document.getElementById('comparisonMetrics').innerHTML = metricsHtml;
+
+            // 5. Populate Bullet Chart
+            let bulletHtml = data.visuals.bullet_chart_data.map(item =>
+                `<div class="mb-3"><div class="flex justify-between mb-1"><span class="text-base font-medium text-black">${item.name}</span><span class="text-sm font-medium text-black">${item.value.toFixed(1)}%</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-blue-600 h-2.5 rounded-full" style="width: ${item.value}%"></div></div></div>`
+            ).join('');
+            document.getElementById('comparisonBulletChart').innerHTML = bulletHtml;
+        })
+        .catch(error => {
+            console.error('Comparison Error:', error);
+            compPlaceholder.innerHTML = `<p class="text-red-500">An error occurred during comparison.</p>`;
+        });
+    });
+}
+</script>
+{% endblock %}
